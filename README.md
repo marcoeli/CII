@@ -1,4 +1,6 @@
 # CII - Casa Inteligente Icodz (Smart Home)
+![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)
+
 
 CII (Casa Inteligente Icodz) is a comprehensive IoT ecosystem designed for local-first automation, robust MQTT communication, and smart resource management. Originally developed for water storage monitoring and control (Cisterna), it has evolved into a modular smart home framework.
 
