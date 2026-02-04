@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurar Recursos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 20px auto;
+            padding: 15px;
+            background: #f5f5f5
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1)
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 24px
+        }
+
+        .info {
+            background: #e3f2fd;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            border-left: 3px solid #2196f3
+        }
+
+        .group {
+            margin-bottom: 20px;
+            padding: 12px;
+            background: #fafafa;
+            border-radius: 6px
+        }
+
+        .group h3 {
+            margin: 0 0 10px 0;
+            color: #34495e;
+            font-size: 16px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 8px;
+            box-sizing: border-box;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #3498db
+        }
+
+        input.err {
+            border-color: #e74c3c
+        }
+
+        .err-msg {
+            color: #e74c3c;
+            font-size: 12px;
+            display: none;
+            margin-bottom: 8px
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600
+        }
+
+        button:hover {
+            background: #229954
+        }
+
+        button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed
+        }
+
+        .status {
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            display: none
+        }
+
+        .status.ok {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb
+        }
+
+        .status.err {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #7f8c8d
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 8px 15px;
+            background: #ecf0f1;
+            color: #2c3e50;
+            text-decoration: none;
+            border-radius: 4px;
+            text-align: center
+        }
+
+        a:hover {
+            background: #bdc3c7
+        }
+
+        input.readonly {
+            background-color: #eee;
+            color: #7f8c8d;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>⚙️ Configurar Recursos</h1>
+        <div class="info"><strong>ℹ️</strong> Use apenas letras, números e underscore (_)</div>
+        <div id="status" class="status"></div>
+        <div id="loading" class="loading">Carregando...</div>
+
+        <form id="form" style="display:none">
+            <div class="group">
+                <h3>💧 Bombas (IDs Fixos)</h3>
+                <label>Bomba 1 (GPIO 25):</label>
+                <input type="text" id="p0" pattern="[a-zA-Z0-9_]+" maxlength="31" readonly class="readonly">
+                <div class="err-msg" id="e0">Apenas letras, números e _</div>
+
+                <label>Bomba 2 (GPIO 26):</label>
+                <input type="text" id="p1" pattern="[a-zA-Z0-9_]+" maxlength="31" readonly class="readonly">
+                <div class="err-msg" id="e1">Apenas letras, números e _</div>
+            </div>
+
+            <div class="group">
+                <h3>📏 Sensor (ID Fixo)</h3>
+                <label>Ultrassônico:</label>
+                <input type="text" id="l0" pattern="[a-zA-Z0-9_]+" maxlength="31" readonly class="readonly">
+                <div class="err-msg" id="e2">Apenas letras, números e _</div>
+            </div>
+
+            <button type="submit" id="btn">Salvar</button>
+        </form>
+        <a href="/">← Voltar</a>
+    </div>
+
+    <script>
+        const form = document.getElementById('form'), loading = document.getElementById('loading'),
+            status = document.getElementById('status'), btn = document.getElementById('btn');
+
+        function show(msg, isErr) {
+            status.textContent = msg; status.className = 'status ' + (isErr ? 'err' : 'ok');
+            status.style.display = 'block'; setTimeout(() => status.style.display = 'none', 4000)
+        }
+
+        function validate(i, e) {
+            const v = /^[a-zA-Z0-9_]+$/.test(i.value), err = document.getElementById(e);
+            if (!v && i.value) { i.classList.add('err'); err.style.display = 'block' }
+            else { i.classList.remove('err'); err.style.display = 'none' } return v || !i.value
+        }
+
+        fetch('/api/resources').then(r => r.json()).then(d => {
+            document.getElementById('p0').value = d.pumps[0] || '';
+            document.getElementById('p1').value = d.pumps[1] || '';
+            document.getElementById('l0').value = d.levels[0] || '';
+            loading.style.display = 'none'; form.style.display = 'block'
+        }).catch(e => { loading.textContent = 'Erro'; console.error(e) });
+
+        ['p0', 'p1', 'l0'].forEach((id, i) => {
+            document.getElementById(id).addEventListener('input', () => validate(document.getElementById(id), 'e' + i))
+        });
+
+        form.addEventListener('submit', e => {
+            e.preventDefault(); let ok = true;
+            ['p0', 'p1', 'l0'].forEach((id, i) => { if (!validate(document.getElementById(id), 'e' + i)) ok = false });
+            if (!ok) { show('Corrija os erros', true); return }
+            btn.disabled = true; btn.textContent = 'Salvando...';
+            fetch('/api/resources', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pumps: [document.getElementById('p0').value,
+                    document.getElementById('p1').value], levels: [document.getElementById('l0').value]
+                })
+            })
+                .then(r => r.json()).then(res => {
+                    show(res.ok ? '✓ Salvo!' : 'Erro: ' + res.error, !res.ok);
+                    btn.disabled = false; btn.textContent = 'Salvar'
+                })
+                .catch(() => { show('Erro de comunicação', true); btn.disabled = false; btn.textContent = 'Salvar' })
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cisterna Patio - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🌊 Cisterna Patio</h1>
+            <div class="connection-status">
+                <span id="wifiStatus">●</span>
+                <span id="mqttStatus">●</span>
+            </div>
+        </header>
+
+        <!-- Dashboard Home -->
+        <section id="dashboard" class="card">
+            <h2>Status do Sistema</h2>
+            <div class="level-display">
+                <div class="level-circle">
+                    <span id="levelPercent">--%</span>
+                </div>
+                <p id="levelLiters">-- Litros</p>
+                <p id="levelAlert" class="alert-badge">--</p>
+            </div>
+
+            <div class="pumps-status">
+                <div class="pump-card" onclick="togglePump(0)" style="cursor: pointer;">
+                    <h3>Bomba 1</h3>
+                    <p id="pump1Status">--</p>
+                    <small>Clique para alternar</small>
+                </div>
+                <div class="pump-card" onclick="togglePump(1)" style="cursor: pointer;">
+                    <h3>Bomba 2</h3>
+                    <p id="pump2Status">--</p>
+                    <small>Clique para alternar</small>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tank Configuration -->
+        <section id="tankConfig" class="card" style="display:none;">
+            <h2>Configuração do Tanque</h2>
+            <form id="tankForm">
+                <div class="form-group">
+                    <label>Formato do Tanque</label>
+                    <select id="tankShape" onchange="updateTankFields()">
+                        <option value="rectangular">Retangular</option>
+                        <option value="cylindrical">Cilíndrico</option>
+                    </select>
+                </div>
+
+                <div id="rectangularFields">
+                    <div class="form-group">
+                        <label>Altura (cm)</label>
+                        <input type="number" id="height" min="10" max="1000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Largura (cm)</label>
+                        <input type="number" id="width" min="10" max="1000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Profundidade (cm)</label>
+                        <input type="number" id="depth" min="10" max="1000" required>
+                    </div>
+                </div>
+
+                <div id="cylindricalFields" style="display:none;">
+                    <div class="form-group">
+                        <label>Altura (cm)</label>
+                        <input type="number" id="heightCyl" min="10" max="1000">
+                    </div>
+                    <div class="form-group">
+                        <label>Diâmetro Superior (cm)</label>
+                        <input type="number" id="diameterTop" min="10" max="1000">
+                    </div>
+                    <div class="form-group">
+                        <label>Diâmetro Inferior (cm)</label>
+                        <input type="number" id="diameterBottom" min="10" max="1000">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Offset do Sensor (cm)</label>
+                    <input type="number" id="sensorOffset" min="0" max="100" value="5" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Intervalo de Publicação (s)</label>
+                    <input type="number" id="reportInterval" min="1" max="3600" value="30" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Temperatura Ambiente (°C)</label>
+                    <input type="number" id="temperature" min="0" max="100" value="25" step="0.1" required>
+                    <small>Para compensação do sensor</small>
+                </div>
+
+                <div class="volume-preview">
+                    <p>Volume Máximo: <strong id="maxVolume">-- L</strong></p>
+                </div>
+
+                <button type="submit">💾 Salvar Configuração</button>
+            </form>
+        </section>
+
+        <!-- Navigation -->
+        <nav class="bottom-nav">
+            <button onclick="showSection('dashboard')">🏠 Início</button>
+            <button onclick="showSection('tankConfig')">⚙️ Configurar</button>
+            <button onclick="window.location.href='/resources'">🔧 Recursos</button>
+            <button onclick="window.location.href='/setup'">📶 WiFi</button>
+        </nav>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

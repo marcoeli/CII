@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cisterna - Configuração WiFi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .mode-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .mode-dev {
+            background: #ffd700;
+            color: #333;
+        }
+
+        .mode-prod {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        input:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .scan-btn {
+            background: #f0f0f0;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🌊 Cisterna Patio</h1>
+        <p class="subtitle">Configuração Inicial de Wi-Fi</p>
+
+        <div id="modeBadge" class="mode-badge"></div>
+
+        <form id="setupForm">
+            <button type="button" class="scan-btn" onclick="scanNetworks()">
+                📡 Escanear Redes
+            </button>
+
+            <div class="form-group">
+                <label for="tenant">Tenant (Organização)</label>
+                <input type="text" id="tenant" placeholder="ex: default" required>
+            </div>
+
+            <div class="form-group">
+                <label for="home">Home (Residência)</label>
+                <input type="text" id="home" placeholder="ex: main" required>
+            </div>
+
+            <div class="form-group">
+                <label for="ssid">Nome da Rede (SSID)</label>
+                <select id="ssid" required>
+                    <option value="">Selecione uma rede...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Senha Wi-Fi</label>
+                <input type="password" id="password" placeholder="Digite a senha" required minlength="8">
+            </div>
+
+            <div class="form-group" id="claimCodeGroup">
+                <label for="claimCode">Código de Ativação (Claim Code)</label>
+                <input type="text" id="claimCode" placeholder="Cole o código aqui">
+                <small style="color: #666; display: block; margin-top: 5px;">
+                    Obtenha o código no painel administrativo
+                </small>
+            </div>
+
+            <button type="submit">
+                💾 Salvar e Conectar
+            </button>
+        </form>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        let currentMode = 'dev';
+
+        // Detectar modo (DEV/PROD)
+        async function detectMode() {
+            try {
+                const response = await fetch('/api/mode');
+                const data = await response.json();
+                currentMode = data.mode || 'dev';
+
+                const badge = document.getElementById('modeBadge');
+                const claimCodeInput = document.getElementById('claimCode');
+                const claimCodeGroup = document.getElementById('claimCodeGroup');
+
+                if (currentMode === 'dev') {
+                    badge.textContent = '🔧 MODO DEV';
+                    badge.className = 'mode-badge mode-dev';
+                    claimCodeInput.disabled = true;
+                    claimCodeInput.placeholder = 'DEV MODE - Código não necessário';
+                    claimCodeInput.value = 'DEV-AUTO';
+                } else {
+                    badge.textContent = '🚀 MODO PRODUÇÃO';
+                    badge.className = 'mode-badge mode-prod';
+                    claimCodeInput.disabled = false;
+                    claimCodeInput.required = true;
+                }
+            } catch (error) {
+                console.error('Erro ao detectar modo:', error);
+            }
+        }
+
+        // Escanear redes Wi-Fi
+        async function scanNetworks() {
+            const select = document.getElementById('ssid');
+            select.innerHTML = '<option value="">Escaneando...</option>';
+
+            try {
+                const response = await fetch('/api/scan');
+                const networks = await response.json();
+
+                select.innerHTML = '<option value="">Selecione uma rede...</option>';
+
+                networks.forEach(net => {
+                    const option = document.createElement('option');
+                    option.value = net.ssid;
+                    option.textContent = `${net.ssid} (${net.rssi} dBm)`;
+                    select.appendChild(option);
+                });
+
+                showStatus('Redes encontradas!', 'success');
+            } catch (error) {
+                select.innerHTML = '<option value="">Erro ao escanear</option>';
+                showStatus('Erro ao escanear redes', 'error');
+            }
+        }
+
+        // Enviar configuração
+        document.getElementById('setupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const tenant = document.getElementById('tenant').value;
+            const home = document.getElementById('home').value;
+            const ssid = document.getElementById('ssid').value;
+            const password = document.getElementById('password').value;
+            const claimCode = document.getElementById('claimCode').value;
+
+            const button = e.target.querySelector('button[type="submit"]');
+            button.innerHTML = '<span class="loading"></span> Salvando...';
+            button.disabled = true;
+
+            try {
+                const response = await fetch('/api/wifi', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tenant: tenant,
+                        home: home,
+                        ssid: ssid,
+                        password: password,
+                        claim_code: currentMode === 'prod' ? claimCode : ''
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.ok) {
+                    showStatus('✅ Configuração salva! Reiniciando...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 3000);
+                } else {
+                    showStatus('❌ Erro: ' + (data.error || 'Desconhecido'), 'error');
+                    button.innerHTML = '💾 Salvar e Conectar';
+                    button.disabled = false;
+                }
+            } catch (error) {
+                showStatus('❌ Erro de comunicação com o dispositivo', 'error');
+                button.innerHTML = '💾 Salvar e Conectar';
+                button.disabled = false;
+            }
+        });
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+            status.style.display = 'block';
+
+            if (type === 'success') {
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Inicializar
+        detectMode();
+    </script>
+</body>
+
+</html>

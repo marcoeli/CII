@@ -1,0 +1,29 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "App: Principal",
+            "cwd": "flutter",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "App: Simulador",
+            "cwd": "simulator",
+            "request": "launch",
+            "type": "dart"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Full Project (App + Simulator)",
+            "configurations": [
+                "App: Principal",
+                "App: Simulador"
+            ]
+        }
+    ]
+}
